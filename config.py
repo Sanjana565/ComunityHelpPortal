@@ -1,18 +1,20 @@
 import os
-from urllib.parse import quote_plus
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent
+DEFAULT_DB_PATH = BASE_DIR / "community_help_portal.db"
 
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "community-help-portal-secret")
 
-    MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
-    MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
-    MYSQL_USER = os.getenv("MYSQL_USER", "root")
-    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "Sourabh.1")
-    MYSQL_DB = os.getenv("MYSQL_DB", "community_help_portal")
-
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        f"mysql+pymysql://{MYSQL_USER}:{quote_plus(MYSQL_PASSWORD)}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
-    )
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL:
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    else:
+        SQLALCHEMY_DATABASE_URI = os.getenv(
+            "SQLALCHEMY_DATABASE_URI",
+            f"sqlite:///{DEFAULT_DB_PATH}"
+        )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
