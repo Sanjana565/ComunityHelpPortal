@@ -1,55 +1,124 @@
 {% extends "base.html" %}
-{% block title %}Requests{% endblock %}
 {% block content %}
-<div class="card">
-  <h2>Create Help Request</h2>
-  <form method="post">
-    <input type="text" name="title" placeholder="Request Title" required>
-    <textarea name="description" rows="5" placeholder="Describe your request" required></textarea>
-    <select name="category" required>
-      <option value="">Select Category</option>
-      <option value="Technical">Technical</option>
-      <option value="Financial">Financial</option>
-      <option value="Medical">Medical</option>
-      <option value="Education">Education</option>
-      <option value="Social">Social</option>
-    </select>
-    <button type="submit" class="btn">Submit Request</button>
-  </form>
-</div>
+<div class="container py-4">
+    <!-- Flash Messages Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close text-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-<div class="card">
-  <h2>Your Requests</h2>
-  <form method="get" class="grid">
-    <input type="text" name="q" placeholder="Search requests" value="{{ q }}">
-    <select name="category">
-      <option value="">All Categories</option>
-      <option value="Technical" {% if category == 'Technical' %}selected{% endif %}>Technical</option>
-      <option value="Financial" {% if category == 'Financial' %}selected{% endif %}>Financial</option>
-      <option value="Medical" {% if category == 'Medical' %}selected{% endif %}>Medical</option>
-      <option value="Education" {% if category == 'Education' %}selected{% endif %}>Education</option>
-      <option value="Social" {% if category == 'Social' %}selected{% endif %}>Social</option>
-    </select>
-    <select name="status">
-      <option value="">All Statuses</option>
-      <option value="Open" {% if status == 'Open' %}selected{% endif %}>Open</option>
-      <option value="Closed" {% if status == 'Closed' %}selected{% endif %}>Closed</option>
-    </select>
-    <button type="submit" class="btn">Filter</button>
-  </form>
-  {% if requests %}
-    <table>
-      <tr><th>Title</th><th>Category</th><th>Status</th></tr>
-      {% for req in requests %}
-      <tr>
-        <td>{{ req.title }}</td>
-        <td>{{ req.category }}</td>
-        <td>{{ req.status }}</td>
-      </tr>
-      {% endfor %}
-    </table>
-  {% else %}
-    <p class="muted">No requests yet.</p>
-  {% endif %}
+    <div class="row g-4">
+        <!-- Left Side: Create a Request Form -->
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm border-0 h-100" style="background-color: #111827; color: #f3f4f6;">
+                <h3 class="mb-4 text-primary fw-bold">Submit Help Request</h3>
+                <form action="{{ url_for('requests') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-semibold">Title</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="title" name="title" placeholder="e.g., Medical Assistance Needed" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label fw-semibold">Category</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="category" name="category" required>
+                            <option value="" disabled selected>Select a category</option>
+                            <option value="Medical">Medical</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Food & Groceries">Food & Groceries</option>
+                            <option value="Education">Education</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Description</label>
+                        <textarea class="form-control bg-dark text-white border-secondary" id="description" name="description" rows="4" placeholder="Describe how the community can support you..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mt-2">Submit Request</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side: Search Filters & Global Requests Feed -->
+        <div class="col-md-8">
+            <div class="card p-4 shadow-sm border-0" style="background-color: #111827; color: #f3f4f6;">
+                <h3 class="mb-4 fw-bold">Ecosystem Request Feed</h3>
+                
+                <!-- Search and Filter Controls Grid -->
+                <form method="GET" action="{{ url_for('requests') }}" class="row g-2 mb-4">
+                    <div class="col-md-5">
+                        <input type="text" name="q" class="form-control bg-dark text-white border-secondary" placeholder="Search keywords..." value="{{ q or '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="category" class="form-select bg-dark text-white border-secondary">
+                            <option value="">All Categories</option>
+                            <option value="Medical" {% if category == 'Medical' %}selected{% endif %}>Medical</option>
+                            <option value="Transport" {% if category == 'Transport' %}selected{% endif %}>Transport</option>
+                            <option value="Food & Groceries" {% if category == 'Food & Groceries' %}selected{% endif %}>Food & Groceries</option>
+                            <option value="Education" {% if category == 'Education' %}selected{% endif %}>Education</option>
+                            <option value="Other" {% if category == 'Other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="status" class="form-select bg-dark text-white border-secondary">
+                            <option value="">All Statuses</option>
+                            <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Assigned" {% if status == 'Assigned' %}selected{% endif %}>Assigned</option>
+                            <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center">
+                            <i class="bi bi-search">Filter</i>
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="border-secondary my-4">
+
+                <!-- Displaying Requests Loop -->
+                <div class="request-list">
+                    {% if requests %}
+                        {% for req in requests %}
+                            <div class="card mb-3 border-0 shadow-sm" style="background-color: #1f2937;">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title text-info fw-bold mb-0">{{ req.title }}</h5>
+                                        <span class="badge {% if req.status == 'Pending' %}bg-warning text-dark{% elif req.status == 'Assigned' %}bg-primary{% else %}bg-success{% endif %} rounded-pill px-3 py-1 text-uppercase fw-bold text-xs">
+                                            {{ req.status }}
+                                        </span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <span class="badge bg-secondary text-uppercase tracking-wider text-xs px-2 py-1">{{ req.category }}</span>
+                                        <small class="text-muted ms-2">Submitted on {{ req.created_at.strftime('%Y-%m-%d') if req.created_at else 'Recent' }}</small>
+                                    </div>
+                                    <p class="card-text text-light-50">{{ req.description }}</p>
+                                    
+                                    <!-- Action options inside the ecosystem layout -->
+                                    <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top border-dark">
+                                        {% if current_user.role == 'admin' or current_user.id == req.user_id %}
+                                            <span class="text-muted my-auto me-auto small">Tied to User ID: #{{ req.user_id }}</span>
+                                        {% endif %}
+                                        <button class="btn btn-outline-info btn-sm px-3 fw-bold">View Details</button>
+                                        {% if req.status == 'Pending' and current_user.id != req.user_id %}
+                                            <button class="btn btn-success btn-sm px-3 fw-bold">Apply / Claim</button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <p class="text-muted fs-5">No community help requests found matching your current filters.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
